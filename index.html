@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Capability Information</title>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MW1X3HHQ1N"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-MW1X3HHQ1N');
+</script>
+</head>
+<body>
+    <h1>Capability Information</h1>
+    <p>Enter capability information (formatted from <a href="https://github.com/capablevms/cheri-examples/blob/master/include/common.h#L10">pp_cap</a>):</p>
+    <textarea id="input" rows="5" cols="50"></textarea>
+    <button onclick="parseCapability()">Submit</button>
+    <div id="explanation"></div>
+
+    <script>
+        function parseCapability() {
+            var input = document.getElementById("input").value;
+            var capability = input.split(", ");
+            var explanationText = "";
+
+            for (var i = 0; i < capability.length; i++) {
+                var field = capability[i].split(": ");
+                var name = field[0].trim();
+                var value = field[1].trim();
+
+                if (name === "Tag") {
+                    explanationText += "<strong>Tag:</strong> " + value + "<br>";
+                    explanationText += "- " + (value === "1" ? "The register contains a capability" : "The register contains normal data") + "<br><br>";
+                }
+
+                if (name === "u") {
+                    explanationText += "<strong>Unsealed flag:</strong> " + value + "<br>";
+                    explanationText += "- " + (value === "1" ? "The capability is usable for general-purpose capability operations" : "The capability is sealed and can only be used by a CCall instruction") + "<br><br>";
+                }
+
+                if (name === "Perms") {
+                    explanationText += "<strong>Permissions mask:</strong> " + value + " (" + getBinaryPerms(value) + ")<br>";
+                    explanationText += getPermissionExplanation(value) + "<br><br>";
+                }
+
+                if (name === "Type") {
+                    explanationText += "<strong>Object type:</strong> " + value + "<br>";
+                    explanationText += "- " + (value === "1" ? "The capability is an executable capability with the entry point address" : "The capability is a non-executable capability with a specific type") + "<br><br>";
+                }
+
+                if (name === "Address") {
+                    explanationText += "<strong>Address:</strong> " + value + "<br>";
+                }
+
+                if (name === "Base") {
+                    explanationText += "<strong>Base virtual address:</strong> " + value + "<br>";
+                }
+
+                if (name === "End") {
+                    explanationText += "<strong>End virtual address:</strong> " + value + "<br>";
+                }
+
+                if (name === "Flags") {
+                    explanationText += "<strong>Flags:</strong> " + value + "<br>";
+                }
+
+                if (name === "Length") {
+                    explanationText += "<strong>Length in bytes:</strong> " + hexToDecimal(value) + "<br><br>";
+                }
+
+                if (name === "Offset") {
+                    explanationText += "<strong>Offset:</strong> " + value + "<br><br>";
+                }
+            }
+
+            document.getElementById("explanation").innerHTML = explanationText;
+        }
+
+        function getBinaryPerms(perms) {
+            var binaryPerms = parseInt(perms, 16).toString(2).padStart(31, '0');
+            return binaryPerms;
+        }
+
+        const hexToDecimal = hex => parseInt(hex, 16);
+
+
+
+        function getPermissionExplanation(value) {
+            var table = {
+                "0": "Non Ephemeral - Allow this capability to persist beyond a protected procedure return",
+                "1": "Permit Execute - Allow this capability to be used in the PCC register as a capability for the program counter",
+                "2": "Permit Load - Allow this capability to be used as a pointer for loading other capabilities",
+                "3": "Permit Store - Allow this capability to be used as a pointer for storing data from general-purpose registers",
+                "4": "Permit Load Capability - Allow this capability to be used as a pointer for loading other capabilities",
+                "5": "Permit Store Capability - Allow this capability to be used as a pointer for storing other capabilities",
+                "6": "Permit Store Ephemeral Capability - Allow this capability to be used as a pointer for storing ephemeral capabilities",
+                "7": "Permit Seal - Allow this capability to be used to seal or unseal capabilities with the same otype/eaddr",
+                "8": "Permit Set Type - Allow setting the otype/eaddr of this capability to any value between base and base+length-1 if Permit Execute is also set",
+                "10": "Access EPCC",
+                "11": "Access KDC",
+                "12": "Access KCC",
+                "13": "Access KR1C",
+                "14": "Access KR2C"
+            };
+
+            // 31 bit value
+
+            var binaryPerms = getBinaryPerms(value);
+            // parseInt(value, 16).toString(2).padStart(32, '0');
+            var explanation = "";
+
+            for (var i = 30; i >= 0; i--) {
+            // for (var i = 0; i < permissions.length; i++) {
+                if (binaryPerms[i] === "1") {
+                    explanation
+                        += "- <strong>" + (30 - i) + "</strong>&emsp;" + table[30 - i] + "<br>";
+                }
+            }
+
+            return explanation;
+        }
+    </script>
+</body>
+</html>
